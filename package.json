@@ -1,0 +1,26 @@
+{
+  "name": "comp229-2025",
+  "version": "1.0.0",
+  "description": "COM229",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reinaldozhu6-web/COMP229-2025.git"
+  },
+  "author": "Reinaldo Pang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reinaldozhu6-web/COMP229-2025/issues"
+  },
+  "homepage": "https://github.com/reinaldozhu6-web/COMP229-2025#readme",
+  "dependencies": {
+    "connect": "^3.7.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
