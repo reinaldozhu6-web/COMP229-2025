@@ -18,7 +18,11 @@
   "homepage": "https://github.com/reinaldozhu6-web/COMP229-2025#readme",
   "dependencies": {
     "connect": "^3.7.0",
-    "express": "^5.1.0"
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "http-errors": "^2.0.0",
+    "mongoose": "^8.19.0",
+    "morgan": "^1.10.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

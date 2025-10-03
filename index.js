@@ -1,42 +1,24 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+
 const app = express();
 
-// ========== 路由处理函数 ==========
-function helloWorld(req, res, next) {
-    res.send('Hello World');
-}
+// 中间件
+app.use(cors());
+app.use(express.json());
 
-function goodbye(req, res, next) {
-    res.send('Goodbye, guys!');
-}
+// 连接数据库
+connectDB();
 
-// ========== 用户对象 ==========
-const userObj = {
-    name: 'John Smith',
-    email: 'john@smith.com'
-};
+// 路由
+const indexRouter = require("./app/routers/index");
+const userRouter = require("./app/routers/users");
 
-// /user → 返回 JSON
-app.get('/user', (req, res) => {
-    res.json(userObj);
-});
+app.use("/", indexRouter);
+app.use("/api/users", userRouter);
 
-// /user/:userId → 返回带参数的 JSON
-app.get('/user/:userId', (req, res) => {
-    console.log(req.params.userId);
-
-    res.json({
-        userId: req.params.userId,
-        firstName: 'John',
-        lastName: 'Smith'
-    });
-});
-
-// ========== 路由绑定 ==========
-app.use('/hello', helloWorld);
-app.use('/goodbye', goodbye);
-
-// ========== 启动服务器 ==========
+// 启动服务器
 app.listen(3000, () => {
-    console.log('Server running at http://localhost:3000');
+    console.log("🚀 Server running at http://localhost:3000");
 });
