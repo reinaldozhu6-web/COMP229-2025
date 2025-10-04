@@ -1,24 +1,48 @@
 const express = require("express");
 const cors = require("cors");
+const morgan = require("morgan");
+const createError = require("http-errors");
 const connectDB = require("./config/db");
 
+const contactRoutes = require("./app/routers/contactRoutes");
+const projectRoutes = require("./app/routers/projectRoutes");
+const serviceRoutes = require("./app/routers/serviceRoutes");
+const userRoutes = require("./app/routers/userRoutes");
+
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// 中间件
-app.use(cors());
-app.use(express.json());
-
-// 连接数据库
+// Connect to MongoDB
 connectDB();
 
-// 路由
-const indexRouter = require("./app/routers/index");
-const userRouter = require("./app/routers/users");
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(morgan("dev"));
 
-app.use("/", indexRouter);
-app.use("/api/users", userRouter);
+// Root endpoint
+app.get("/", (req, res) => {
+    res.json({ message: "Welcome to My Portfolio" });
+});
 
-// 启动服务器
-app.listen(3000, () => {
-    console.log("🚀 Server running at http://localhost:3000");
+// API routes
+app.use("/api/contacts", contactRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/users", userRoutes);
+
+// Handle 404
+app.use((req, res, next) => {
+    next(createError(404, "Not Found"));
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    res.status(err.status || 500).json({
+        error: { message: err.message || "Internal Server Error" },
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
