@@ -1,28 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProjects, deleteProject } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 export default function ProjectsList() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchProjects() {
+    async function loadProjects() {
       try {
         setLoading(true);
-        const data = await getProjects();
+        const data = await apiRequest('/projects');
         setProjects(Array.isArray(data) ? data : []);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load projects');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load projects');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchProjects();
+    loadProjects();
   }, []);
 
   const handleDelete = async (id) => {
@@ -31,19 +30,16 @@ export default function ProjectsList() {
     }
 
     try {
-      await deleteProject(id);
+      await apiRequest(`/projects/${id}`, { method: 'DELETE' });
       setProjects((prev) => prev.filter((project) => project._id !== id));
-    } catch (err) {
-      setError(err.message || 'Failed to delete project');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete project');
     }
   };
 
   if (loading) {
     return <p>Loading projects...</p>;
-  }
-
-  if (error) {
-    return <p role="alert">{error}</p>;
   }
 
   return (

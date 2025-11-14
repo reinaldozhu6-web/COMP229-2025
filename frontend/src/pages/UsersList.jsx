@@ -1,28 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUsers, deleteUser } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 export default function UsersList() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchUsers() {
+    async function loadUsers() {
       try {
         setLoading(true);
-        const data = await getUsers();
+        const data = await apiRequest('/users');
         setUsers(Array.isArray(data) ? data : []);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load users');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load users');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchUsers();
+    loadUsers();
   }, []);
 
   const handleDelete = async (id) => {
@@ -31,19 +30,16 @@ export default function UsersList() {
     }
 
     try {
-      await deleteUser(id);
+      await apiRequest(`/users/${id}`, { method: 'DELETE' });
       setUsers((prev) => prev.filter((user) => user._id !== id));
-    } catch (err) {
-      setError(err.message || 'Failed to delete user');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete user');
     }
   };
 
   if (loading) {
     return <p>Loading users...</p>;
-  }
-
-  if (error) {
-    return <p role="alert">{error}</p>;
   }
 
   return (

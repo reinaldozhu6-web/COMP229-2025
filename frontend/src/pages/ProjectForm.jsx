@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createProject, getProject, updateProject } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 const initialState = {
   title: '',
@@ -15,31 +15,32 @@ export default function ProjectForm() {
   const [values, setValues] = useState(initialState);
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isEdit) {
       return;
     }
 
-    async function fetchProject() {
+    async function loadProject() {
       try {
-        const data = await getProject(id);
+        setLoading(true);
+        const data = await apiRequest(`/projects/${id}`);
         setValues({
           title: data.title || '',
           completion: data.completion ? data.completion.split('T')[0] : '',
           description: data.description || '',
         });
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load project');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load project');
+        navigate('/projects');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchProject();
-  }, [id, isEdit]);
+    loadProject();
+  }, [id, isEdit, navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,13 +53,14 @@ export default function ProjectForm() {
 
     try {
       if (isEdit) {
-        await updateProject(id, values);
+        await apiRequest(`/projects/${id}`, { method: 'PUT', body: values });
       } else {
-        await createProject(values);
+        await apiRequest('/projects', { method: 'POST', body: values });
       }
       navigate('/projects');
-    } catch (err) {
-      setError(err.message || 'Failed to save project');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save project');
     } finally {
       setSubmitting(false);
     }
@@ -71,11 +73,6 @@ export default function ProjectForm() {
   return (
     <section>
       <h1>{isEdit ? 'Edit Project' : 'New Project'}</h1>
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>
-          {error}
-        </p>
-      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="title">Title</label>

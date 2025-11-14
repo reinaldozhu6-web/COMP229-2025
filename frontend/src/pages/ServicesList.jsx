@@ -1,28 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getServices, deleteService } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 export default function ServicesList() {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchServices() {
+    async function loadServices() {
       try {
         setLoading(true);
-        const data = await getServices();
+        const data = await apiRequest('/services');
         setServices(Array.isArray(data) ? data : []);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load services');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load services');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchServices();
+    loadServices();
   }, []);
 
   const handleDelete = async (id) => {
@@ -31,19 +30,16 @@ export default function ServicesList() {
     }
 
     try {
-      await deleteService(id);
+      await apiRequest(`/services/${id}`, { method: 'DELETE' });
       setServices((prev) => prev.filter((service) => service._id !== id));
-    } catch (err) {
-      setError(err.message || 'Failed to delete service');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete service');
     }
   };
 
   if (loading) {
     return <p>Loading services...</p>;
-  }
-
-  if (error) {
-    return <p role="alert">{error}</p>;
   }
 
   return (

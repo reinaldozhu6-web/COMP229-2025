@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createUser, getUser, updateUser } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 const initialState = {
   firstname: '',
@@ -16,32 +16,33 @@ export default function UserForm() {
   const [values, setValues] = useState(initialState);
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isEdit) {
       return;
     }
 
-    async function fetchUser() {
+    async function loadUser() {
       try {
-        const data = await getUser(id);
+        setLoading(true);
+        const data = await apiRequest(`/users/${id}`);
         setValues({
           firstname: data.firstname || '',
           lastname: data.lastname || '',
           email: data.email || '',
           password: '',
         });
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load user');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load user');
+        navigate('/users');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchUser();
-  }, [id, isEdit]);
+    loadUser();
+  }, [id, isEdit, navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -58,13 +59,14 @@ export default function UserForm() {
         if (!payload.password) {
           delete payload.password;
         }
-        await updateUser(id, payload);
+        await apiRequest(`/users/${id}`, { method: 'PUT', body: payload });
       } else {
-        await createUser(values);
+        await apiRequest('/users', { method: 'POST', body: values });
       }
       navigate('/users');
-    } catch (err) {
-      setError(err.message || 'Failed to save user');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save user');
     } finally {
       setSubmitting(false);
     }
@@ -77,11 +79,6 @@ export default function UserForm() {
   return (
     <section>
       <h1>{isEdit ? 'Edit User' : 'New User'}</h1>
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>
-          {error}
-        </p>
-      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="firstname">First Name</label>
@@ -117,7 +114,9 @@ export default function UserForm() {
           />
         </div>
         <div>
-          <label htmlFor="password">Password {isEdit && <small>(leave blank to keep unchanged)</small>}</label>
+          <label htmlFor="password">
+            Password {isEdit && <small>(leave blank to keep unchanged)</small>}
+          </label>
           <input
             id="password"
             name="password"

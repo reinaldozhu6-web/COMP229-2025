@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createService, getService, updateService } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 const initialState = {
   title: '',
@@ -14,30 +14,31 @@ export default function ServiceForm() {
   const [values, setValues] = useState(initialState);
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isEdit) {
       return;
     }
 
-    async function fetchService() {
+    async function loadService() {
       try {
-        const data = await getService(id);
+        setLoading(true);
+        const data = await apiRequest(`/services/${id}`);
         setValues({
           title: data.title || '',
           description: data.description || '',
         });
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load service');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load service');
+        navigate('/services');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchService();
-  }, [id, isEdit]);
+    loadService();
+  }, [id, isEdit, navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -50,13 +51,14 @@ export default function ServiceForm() {
 
     try {
       if (isEdit) {
-        await updateService(id, values);
+        await apiRequest(`/services/${id}`, { method: 'PUT', body: values });
       } else {
-        await createService(values);
+        await apiRequest('/services', { method: 'POST', body: values });
       }
       navigate('/services');
-    } catch (err) {
-      setError(err.message || 'Failed to save service');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save service');
     } finally {
       setSubmitting(false);
     }
@@ -69,11 +71,6 @@ export default function ServiceForm() {
   return (
     <section>
       <h1>{isEdit ? 'Edit Service' : 'New Service'}</h1>
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>
-          {error}
-        </p>
-      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="title">Title</label>

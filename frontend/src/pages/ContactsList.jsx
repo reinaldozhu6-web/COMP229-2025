@@ -1,28 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getContacts, deleteContact } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 export default function ContactsList() {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchContacts() {
+    async function loadContacts() {
       try {
         setLoading(true);
-        const data = await getContacts();
+        const data = await apiRequest('/contacts');
         setContacts(Array.isArray(data) ? data : []);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load contacts');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load contacts');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchContacts();
+    loadContacts();
   }, []);
 
   const handleDelete = async (id) => {
@@ -31,19 +30,16 @@ export default function ContactsList() {
     }
 
     try {
-      await deleteContact(id);
+      await apiRequest(`/contacts/${id}`, { method: 'DELETE' });
       setContacts((prev) => prev.filter((contact) => contact._id !== id));
-    } catch (err) {
-      setError(err.message || 'Failed to delete contact');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete contact');
     }
   };
 
   if (loading) {
     return <p>Loading contacts...</p>;
-  }
-
-  if (error) {
-    return <p role="alert">{error}</p>;
   }
 
   return (

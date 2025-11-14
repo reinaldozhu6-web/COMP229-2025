@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createContact, getContact, updateContact } from '../api/index.js';
+import { apiRequest } from '../api/client.js';
 
 const initialState = {
   firstname: '',
@@ -15,31 +15,32 @@ export default function ContactForm() {
   const [values, setValues] = useState(initialState);
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isEdit) {
       return;
     }
 
-    async function fetchContact() {
+    async function loadContact() {
       try {
-        const data = await getContact(id);
+        setLoading(true);
+        const data = await apiRequest(`/contacts/${id}`);
         setValues({
           firstname: data.firstname || '',
           lastname: data.lastname || '',
           email: data.email || '',
         });
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load contact');
+      } catch (error) {
+        console.error(error);
+        alert('Failed to load contact');
+        navigate('/contacts');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchContact();
-  }, [id, isEdit]);
+    loadContact();
+  }, [id, isEdit, navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -52,13 +53,14 @@ export default function ContactForm() {
 
     try {
       if (isEdit) {
-        await updateContact(id, values);
+        await apiRequest(`/contacts/${id}`, { method: 'PUT', body: values });
       } else {
-        await createContact(values);
+        await apiRequest('/contacts', { method: 'POST', body: values });
       }
       navigate('/contacts');
-    } catch (err) {
-      setError(err.message || 'Failed to save contact');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save contact');
     } finally {
       setSubmitting(false);
     }
@@ -71,11 +73,6 @@ export default function ContactForm() {
   return (
     <section>
       <h1>{isEdit ? 'Edit Contact' : 'New Contact'}</h1>
-      {error && (
-        <p role="alert" style={{ color: 'red' }}>
-          {error}
-        </p>
-      )}
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="firstname">First Name</label>
