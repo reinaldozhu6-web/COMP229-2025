@@ -9,7 +9,7 @@ const initialFormState = {
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState([]);
-  0const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialFormState);
   const [editingContactId, setEditingContactId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
