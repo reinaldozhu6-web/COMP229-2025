@@ -299,18 +299,18 @@ Base URL: `http://localhost:3000/api`
 > Replace the placeholders with actual screenshots when submitting.
 
 * **Dashboard – Users Page**
- ![alt text](User.png)
+ ![alt text](screenshots/User.png)
 * **Projects Page**
-![alt text](Register-1.png)
+![alt text](screenshots/Register-1.png)
 
 * **Services Page**
-![alt text](Service.png)
+![alt text](screenshots/Service.png)
 
 * **Contacts Page**
-![alt text](Contanct.png)
+![alt text](screenshots/Contanct.png)
 
 * **MongoDB Collections**
-![alt text](Mongo.png)
+![alt text](screenshots/Mongo.png)
 
 ---
 
