@@ -301,13 +301,13 @@ Base URL: `http://localhost:3000/api`
 * **Dashboard – Users Page**
  ![alt text](screenshots/User.png)
 * **Projects Page**
-![alt text](screenshots/Register-1.png)
+![alt text](screenshots/Register.png)
 
 * **Services Page**
 ![alt text](screenshots/Service.png)
 
 * **Contacts Page**
-![alt text](screenshots/Contanct.png)
+![alt text](screenshots/Contact.png)
 
 * **MongoDB Collections**
 ![alt text](screenshots/Mongo.png)
