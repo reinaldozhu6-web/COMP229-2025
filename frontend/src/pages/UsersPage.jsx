@@ -1,257 +1,177 @@
-import { useEffect, useState } from 'react';
-import { apiRequest } from '../api.js';
-
-const initialFormState = {
-  firstname: '',
-  lastname: '',
-  email: '',
-  password: '',
-};
+import { useEffect, useState } from "react";
+import { apiRequest } from "../api";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState(initialFormState);
-  const [editingUserId, setEditingUserId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
 
-  // Load all users when the page mounts
   useEffect(() => {
-    async function loadUsers() {
+    (async () => {
       try {
-        setLoading(true);
-        const data = await apiRequest('/users');
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error(error);
-        alert('Failed to load users');
-      } finally {
-        setLoading(false);
+        const data = await apiRequest("/users");
+        setUsers(data);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load users");
       }
-    }
-
-    loadUsers();
+    })();
   }, []);
 
-  const resetForm = () => {
-    setFormData(initialFormState);
-    setEditingUserId(null);
-  };
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEdit = (user) => {
-    setFormData({
-      firstname: user.firstname || '',
-      lastname: user.lastname || '',
-      email: user.email || '',
-      password: '',
-    });
-    setEditingUserId(user._id);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitting(true);
-
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
     try {
-      if (editingUserId) {
-        const payload = {
-          firstname: formData.firstname,
-          lastname: formData.lastname,
-          email: formData.email,
-        };
-
-        if (formData.password) {
-          payload.password = formData.password;
-        }
-
-        const updatedUser = await apiRequest(`/users/${editingUserId}`, {
-          method: 'PUT',
-          body: payload,
-        });
-
-        setUsers((prev) => prev.map((user) => (user._id === editingUserId ? updatedUser : user)));
-      } else {
-        const createdUser = await apiRequest('/users', {
-          method: 'POST',
-          body: formData,
-        });
-
-        setUsers((prev) => [...prev, createdUser]);
-      }
-
-      resetForm();
-    } catch (error) {
-      console.error(error);
-      alert('Failed to save user');
+      const newUser = await apiRequest("/users", {
+        method: "POST",
+        body: form,
+      });
+      setUsers((prev) => [...prev, newUser]);
+      setForm({ firstname: "", lastname: "", email: "", password: "" });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create user");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
-
+  async function handleDelete(id) {
+    if (!window.confirm("Delete this user?")) return;
     try {
-      await apiRequest(`/users/${id}`, { method: 'DELETE' });
-      setUsers((prev) => prev.filter((user) => user._id !== id));
-
-      if (editingUserId === id) {
-        resetForm();
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Failed to delete user');
+      await apiRequest(`/users/${id}`, { method: "DELETE" });
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete user");
     }
-  };
+  }
 
   return (
-    <main className="main">
+    <>
       <div className="page-header">
-        <h1>Users</h1>
-        <p>Manage the people who can access the application.</p>
+        <div>
+          <h1 className="page-title">Users</h1>
+          <p className="page-subtitle">
+            Manage the people who can access the application.
+          </p>
+        </div>
+        {/* 这里先不用按钮做弹窗，简单点 */}
       </div>
 
       <div className="card">
-        <div className="card-header">
-          <h2>{editingUserId ? 'Edit User' : 'Add User'}</h2>
-          {editingUserId && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={resetForm}
-              disabled={submitting}
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-        <form className="card-body form-grid" onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label className="form-label" htmlFor="firstname">
-              First Name
-            </label>
-            <input
-              id="firstname"
-              name="firstname"
-              className="form-input"
-              type="text"
-              value={formData.firstname}
-              onChange={handleChange}
-              required
-            />
+        <h2 style={{ marginTop: 0, marginBottom: 12 }}>Add User</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="form-field">
+              <label className="form-label">First Name</label>
+              <input
+                className="form-input"
+                name="firstname"
+                value={form.firstname}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">Last Name</label>
+              <input
+                className="form-input"
+                name="lastname"
+                value={form.lastname}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">Email</label>
+              <input
+                className="form-input"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">Password</label>
+              <input
+                className="form-input"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          <div className="form-field">
-            <label className="form-label" htmlFor="lastname">
-              Last Name
-            </label>
-            <input
-              id="lastname"
-              name="lastname"
-              className="form-input"
-              type="text"
-              value={formData.lastname}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-field">
-            <label className="form-label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              className="form-input"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-field">
-            <label className="form-label" htmlFor="password">
-              Password {editingUserId && <small>(leave blank to keep current password)</small>}
-            </label>
-            <input
-              id="password"
-              name="password"
-              className="form-input"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder={editingUserId ? '••••••••' : ''}
-              {...(editingUserId ? {} : { required: true })}
-            />
-          </div>
-          <div className="form-field">
-            <button className="btn btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Saving…' : editingUserId ? 'Save changes' : 'Add user'}
-            </button>
-          </div>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? "Saving..." : "Add user"}
+          </button>
         </form>
       </div>
 
       <div className="card">
-        <div className="card-header">
-          <h2>User List</h2>
-        </div>
-        <div className="card-body">
-          {loading ? (
-            <p>Loading users…</p>
-          ) : users.length === 0 ? (
-            <p>No users found.</p>
-          ) : (
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+        <h2 style={{ marginTop: 0, marginBottom: 12 }}>User List</h2>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Created</th>
+                <th style={{ width: 140 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan="5">No users yet.</td>
+                </tr>
+              ) : (
+                users.map((u) => (
+                  <tr key={u._id}>
+                    <td>{u.firstname}</td>
+                    <td>{u.lastname}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      {u.created || u.createdAt
+                        ? new Date(u.created || u.createdAt).toLocaleString()
+                        : "—"}
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn btn-ghost" type="button">
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          type="button"
+                          onClick={() => handleDelete(u._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user._id}>
-                      <td>{user.firstname}</td>
-                      <td>{user.lastname}</td>
-                      <td>{user.email}</td>
-                      <td>{user.created ? new Date(user.created).toLocaleString() : '—'}</td>
-                      <td>
-                        <div className="actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => handleEdit(user)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-danger"
-                            onClick={() => handleDelete(user._id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </main>
+    </>
   );
 }
